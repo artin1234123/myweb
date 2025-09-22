@@ -1,1 +1,273 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Coffee Order</title>
+  <style>
+    :root {
+      --bg-color: #f5f3f1;
+      --text-color: #4a2c2a;
+      --card-bg: #fff;
+      --button-bg: #8b5e34;
+      --button-hover: #704727;
+      --orders-bg: #fff;
+    }
+
+    body.dark {
+      --bg-color: #1e1e1e;
+      --text-color: #f1f1f1;
+      --card-bg: #2a2a2a;
+      --button-bg: #a9744f;
+      --button-hover: #8b5e34;
+      --orders-bg: #333;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      transition: all 0.3s;
+    }
+
+    .login-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .login-container h2 {
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .input-group {
+      position: relative;
+      width: 280px;
+      margin-bottom: 20px;
+    }
+
+    .input-group .icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: #7a5c58;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 12px 12px 12px 40px;
+      border: 2px solid #d1c0b3;
+      border-radius: 10px;
+      font-size: 16px;
+      outline: none;
+      transition: all 0.3s ease;
+      background: #f9f6f4;
+    }
+
+    .input-group input:focus {
+      border-color: #8b5e34;
+      box-shadow: 0 0 6px rgba(139, 94, 52, 0.4);
+      background: #fff;
+    }
+
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 10px;
+      background: var(--button-bg);
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: var(--button-hover);
+    }
+
+    #main {
+      display: none;
+      padding: 20px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background: var(--button-bg);
+      color: white;
+    }
+
+    .menu {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .coffee-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: all 0.3s;
+    }
+
+    .coffee-card img {
+      width: 100%;
+      border-radius: 10px;
+      height: 150px;
+      object-fit: cover;
+      margin-bottom: 10px;
+    }
+
+    .coffee-card select {
+      margin: 5px 0;
+      padding: 5px;
+      border-radius: 8px;
+      border: 1px solid #d1c0b3;
+      outline: none;
+    }
+
+    .orders-popup {
+      display: none;
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      width: 320px;
+      background: var(--orders-bg);
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+      padding: 15px;
+      z-index: 10;
+      color: var(--text-color);
+    }
+  </style>
+</head>
+<body>
+  <!-- ورود اسم -->
+  <div class="login-container" id="loginPage">
+    <h2>☕ Welcome! Please enter your name</h2>
+    <div class="input-group">
+      <span class="icon">👤</span>
+      <input type="text" id="nameInput" placeholder="Your name...">
+    </div>
+    <button onclick="enterSite()">Enter</button>
+  </div>
+
+  <!-- صفحه اصلی -->
+  <div id="main">
+    <div class="topbar">
+      <button onclick="toggleOrders()">Orders</button>
+      <button onclick="toggleDarkMode()" id="modeBtn">🌙 Dark</button>
+    </div>
+    <h2 style="text-align:center;">Coffee Menu</h2>
+    <div class="menu" id="menu"></div>
+
+    <div class="orders-popup" id="ordersPopup">
+      <h3>Orders</h3>
+      <ul id="ordersList"></ul>
+    </div>
+  </div>
+
+  <script>
+    const coffees = [
+      { name: "Cappuccino", img: "https://upload.wikimedia.org/wikipedia/commons/c/c8/Cappuccino_at_Sightglass_Coffee.jpg" },
+      { name: "Latte", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_Lfyz3ci5j9oH8mtMuSTqFgxqGBTdwYLwWLbjAanRjcADpl8gOCsSfuQEtnEAzGWf4UY&usqp=CAU" },
+      { name: "Espresso", img: "https://upload.wikimedia.org/wikipedia/commons/4/45/A_small_cup_of_coffee.JPG" },
+      { name: "Regular Coffee", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxm1vYe6m3WDtD2faufwmP87FDCkGVOdoX0A&s" },
+      { name: "Milk Coffee", img: "https://www.washingtonpost.com/wp-apps/imrs.php?src=https://arc-anglerfish-washpost-prod-washpost.s3.amazonaws.com/public/RV4FTODBAQKRKE2Z64JWQTYRZA.jpg&w=1600&h=900" },
+      { name: "Iced Coffee with Caramel", img: "https://www.nescafe.com/gb/sites/default/files/2024-08/NES_SBU_Recipes%202024_Website_Caramel%20Ice%20Coffee_Hero%20Banner_1066x1066.jpg" },
+      { name: "Americano", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxra9UmQTaLETHKRBIU29BR-Ae72sJW47L5w&s" },
+      { name: "Iced Americano", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRnXEmqJO_kAbz3OxKFR7oVoz6L6ac4s5WJQ&s" },
+      { name: "Hot Milk with Foam", img: "data:image/jpeg;base64,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" },
+      { name: "Latte Macchiato", img: "data:image/jpeg;base64,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" }
+    ];
+
+    const shotOptions = ["Double shot", "Single shot", "Light"];
+    const tempOptions = ["Very hot", "Normal", "Ready to drink"];
+
+    let orders = {};
+    let currentUser = "";
+
+    function enterSite() {
+      const name = document.getElementById("nameInput").value.trim();
+      if (!name) return alert("Please enter your name!");
+      currentUser = name;
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("main").style.display = "block";
+      renderMenu();
+    }
+
+    function renderMenu() {
+      const menu = document.getElementById("menu");
+      menu.innerHTML = "";
+      coffees.forEach(coffee => {
+        const card = document.createElement("div");
+        card.className = "coffee-card";
+        card.innerHTML = `
+          <img src="${coffee.img}" alt="${coffee.name}">
+          <h3>${coffee.name}</h3>
+          <div>
+            <select id="shot-${coffee.name}">
+              ${shotOptions.map(s => `<option>${s}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <select id="temp-${coffee.name}">
+              ${tempOptions.map(t => `<option>${t}</option>`).join('')}
+            </select>
+          </div>
+          <button onclick="orderCoffee('${coffee.name}')">Order</button>
+        `;
+        menu.appendChild(card);
+      });
+    }
+
+    function orderCoffee(coffee) {
+      if (orders[currentUser]) {
+        alert("You already placed an order!");
+        return;
+      }
+      const shot = document.getElementById(`shot-${coffee}`).value;
+      const temp = document.getElementById(`temp-${coffee}`).value;
+      orders[currentUser] = `${coffee} (${shot}, ${temp})`;
+      alert("Your order has been placed: " + orders[currentUser]);
+      renderOrders();
+    }
+
+    function renderOrders() {
+      const list = document.getElementById("ordersList");
+      list.innerHTML = "";
+      for (let person in orders) {
+        const li = document.createElement("li");
+        li.textContent = `${person}: ${orders[person]}`;
+        list.appendChild(li);
+      }
+    }
+
+    function toggleOrders() {
+      const popup = document.getElementById("ordersPopup");
+      popup.style.display = popup.style.display === "block" ? "none" : "block";
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark");
+      const btn = document.getElementById("modeBtn");
+      if (document.body.classList.contains("dark")) {
+        btn.textContent = "☀️ Light";
+      } else {
+        btn.textContent = "🌙 Dark";
+      }
+    }
+  </script>
+</body>
+</html>
